@@ -30,7 +30,6 @@ class Ship:
         for index in self.decks:
             if index.column == column and index.row == row:
                 return index
-        return
 
     def fire(self, row: int, column: int) -> None:
         is_any_alive = False
@@ -51,18 +50,19 @@ class Battleship:
         self.ships = ships
         self.field = {}
 
-        for index in range(len(ships)):
-            ship = Ship(self.ships[index][0], self.ships[index][1])
-            for index in range(len(ship.decks)):
-                self.field[ship.decks[index]] = ship
+        for start, end in ships:
+            ship = Ship(start, end)
+            for deck in ship.decks:
+                self.field[(deck.row, deck.column)] = (deck, ship)
 
     def fire(self, location: tuple) -> str:
-        keys = [(key.row, key.column) for key in self.field.keys()]
-        if location not in keys:
+        if location not in self.field:
             return "Miss!"
-        for index, value in self.field.items():
-            if location[0] == index.row and location[1] == index.column:
-                value.fire(index.row, index.column)
-                if value.is_drowned is True:
-                    return "Sunk!"
-                return "Hit!"
+
+        deck, ship = self.field[location]
+        deck.is_alive = False
+        ship.fire(deck.row, deck.column)
+
+        if ship.is_drowned:
+            return "Sunk!"
+        return "Hit!"
